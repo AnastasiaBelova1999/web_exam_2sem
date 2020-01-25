@@ -11,6 +11,7 @@ import hashlib
 
 app = Flask(__name__)
 app.secret_key = 'asjdfbajSLDFBhjasbfd'
+app.debug = True
 app.config.from_pyfile('config.py')
 db = MySQL(app)
 login_manager = flask_login.LoginManager()
@@ -104,53 +105,6 @@ def list_delete():
     cursor.close()
     return redirect("/list")
 
-@app.route('/list/edit', method=['GET'])
-@login_required
-def list_edit():
-    try:
-        list_id = request.form.get("id")
-        date = request.form.get("date")
-        login = request.form.get("login_users")
-        type_id = request.form.get("type_id")
-        status_id = request.form.get("status_id")
-        type = db.select(["id", "title"], "types")
-        status = db.select(["id", "title"], "status")
-        sub = {
-            'id': list_id,
-            'date': date,
-            'login': login,
-            'type': type_id,
-            'status_id':status_id
-        }
-        return render_template("list_edit.html", list=list, login=flask_login.current_user.login)
-    except Exception:
-        return redirect("/list")
-
-@app.route('/list/edit/submit', methods=['POST'])
-@login_required
-def sub_edit_submit():
-    list_id = request.form.get("id")
-    date = request.form.get("date")
-    login = request.form.get("login_users")
-    type_id = request.form.get("type_id")
-    status_id = request.form.get("status_id")
-    type = db.select(["id", "title"], "types")
-    status = db.select(["id", "title"], "status")
-    if date and status_id and type_id:
-        cursor = db.db.cursor(named_tuple=True)
-        try:
-            cursor.execute(
-                "UPDATE `lists` SET  `date` = '%s',`login` = '%s', `status_id` = '%s', `type_id` = '%s' WHERE `lists`.`id` = %s" % (
-                     date,login, status_id, type_id))
-            db.db.commit()
-            cursor.close()
-            return redirect("/lists")
-        except Exception:
-            return redirect("/lists")
-    else:
-        return redirect("/lists")
-
-
 @app.route('/list/new', methods=['POST', 'GET'])
 @login_required
 def sub_new():
@@ -172,11 +126,61 @@ def sub_new():
                         id, data,login_users, type_id, status_id))
                 db.db.commit()
                 cursor.close()
-                return redirect("/new.html")
+                return redirect("new.html")
             except Exception:
                 return render_template("new.html", login=flask_login.current_user.login, insert_false=True)
         else:
             return render_template("new.html", login=flask_login.current_user.login, insert_false=True)
+
+    @app.route('/list/edit', methods=['POST'])
+    @login_required
+    def list_edit():
+        if flask_login.current_user.role_id is not [1, 2]:
+            redirect("/")
+        try:
+            id = request.form.get("id")
+            date = request.form.get("date")
+            message = request.form.get("message")
+            status_id = request.form.get("status_id")
+            type_id = request.form.get("type_id")
+            user_id = request.form.get("user_id")
+            statuss = db.select(None, "status_request")
+            types = db.select(None, "type_request")
+            req = {
+                'id': id,
+                'date': date,
+                'message': message,
+                'status_id': status_id,
+                'type_id': type_id,
+                'older_id': id
+            }
+            return render_template("list_edit.html", req=req, types=types, statuss=statuss,
+                                   login=flask_login.current_user.login, user_id=user_id,
+                                   user_role=flask_login.current_user.role_id)
+        except Exception:
+            return redirect(url_for("req", error=True))
+
+    @app.route('/list/edit/submit', methods=['POST'])
+    @login_required
+    def list_edit_submit():
+        older_id = request.form.get("older_id")
+        date = request.form.get("date")
+        status_id = request.form.get("status_id")
+        type_id = request.form.get("type_id")
+        message = request.form.get("message")
+        if date and older_id and status_id and type_id and message:
+            cursor = db.db.cursor(named_tuple=True)
+            try:
+                cursor.execute(
+                    "UPDATE `request` SET  `date` = '%s', `status_id` = '%s',`type_id` = '%s',`message` = '%s' WHERE `request`.`id` = %s" % (
+                        date, status_id, type_id, message, older_id))
+                db.db.commit()
+                cursor.close()
+                return redirect(url_for("call-esit"))
+            except Exception:
+                return redirect(url_for("call-list", error=True))
+        else:
+            return redirect(url_for("call-list", error=True))
 
 
 if __name__ == '__main__':
