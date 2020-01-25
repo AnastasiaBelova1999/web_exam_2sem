@@ -57,7 +57,7 @@ def hello_world():
             cursor = db.db.cursor(named_tuple=True, buffered=True)
             try:
                 cursor.execute(
-                    "SELECT id,login FROM users WHERE `login` = '%s' and `password_hash` = '%s'" % (
+                    "SELECT id,login FROM users_exam WHERE `login` = '%s' and `password_hash` = '%s'" % (
                         username, password_hash))
                 user = cursor.fetchone()
             except Exception:
@@ -86,6 +86,38 @@ def logout():
     flask_login.logout_user()
     return render_template("index.html", authorization=not flask_login.current_user.is_anonymous, login="anonimus",
                            login_false=False)
+
+@app.route('/list', methods=['GET'])
+@login_required
+def list():
+    lists = db.select(None, "lists")
+    login = flask_login.current_user.login
+    types = dict(db.select(None, "types"))
+    statuss = dict(db.select(["id", "title"], "statuss"))
+
+    view_lists = []
+    for list in lists:
+        view_lists.append({"id": list.id,
+                          "data": list.data,
+                          "login_users": list.login_users,
+                          "type": type[list.type_id],
+                          "status": type [list.status_id],
+                          "message": list.message,
+                          "type_id": list.type_id,
+                          "status_id": list.status_id
+                          })
+    return render_template("call-list.html", login=login, lists=view_lists)
+
+@app.route('/list/delete', methods=['POST'])
+@login_required
+def list_delete():
+    id = request.form.get("id")
+    cursor = db.db.cursor()
+    cursor.execute("DELETE FROM `lists` WHERE `lists`.`id` = '%s'" % id)
+    cursor.close()
+    return redirect("/list")
+
+
 
 if __name__ == '__main__':
     app.run()
