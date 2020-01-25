@@ -1,4 +1,3 @@
-import json
 
 import mysql
 from flask import Flask, render_template, request, abort, redirect, flash, url_for
@@ -125,7 +124,7 @@ def list_edit():
         }
         return render_template("list_edit.html", list=list, login=flask_login.current_user.login)
     except Exception:
-        return redirect("/sub")
+        return redirect("/list")
 
 @app.route('/list/edit/submit', methods=['POST'])
 @login_required
@@ -137,19 +136,47 @@ def sub_edit_submit():
     status_id = request.form.get("status_id")
     type = db.select(["id", "title"], "types")
     status = db.select(["id", "title"], "status")
-    if date and status_id and type_id and:
+    if date and status_id and type_id:
         cursor = db.db.cursor(named_tuple=True)
         try:
             cursor.execute(
-                "UPDATE `lists` SET  `date` = '%s',`status_id` = '%s', `type_id` = '%s' WHERE `lists`.`id` = %s" % (
-                     date, status_id, type_id))
+                "UPDATE `lists` SET  `date` = '%s',`login` = '%s', `status_id` = '%s', `type_id` = '%s' WHERE `lists`.`id` = %s" % (
+                     date,login, status_id, type_id))
             db.db.commit()
             cursor.close()
-            return redirect("/sub")
+            return redirect("/lists")
         except Exception:
-            return redirect("/sub")
+            return redirect("/lists")
     else:
-        return redirect("/sub")
+        return redirect("/lists")
+
+
+@app.route('/list/new', methods=['POST', 'GET'])
+@login_required
+def sub_new():
+    if request.method == 'GET':
+        types = db.select(["id", "title"], "types")
+        status = db.select(["id", "title"], "status")
+        return render_template("new.html", types=types, status=status)
+    elif request.method == 'POST':
+        id = request.form.get("id")
+        data = request.form.get("data")
+        login_users = request.form.get("login_users")
+        type_id = request.form.get("types")
+        status_id = request.form.get("status")
+        if id and data and login_users and type_id and status_id:
+            cursor = db.db.cursor(named_tuple=True)
+            try:
+                cursor.execute(
+                    "INSERT INTO `subscribers` (`id`, `data`, `login_users`, `type_id`,`status_id`) VALUES ('%s', '%s', '%s', '%s','%s')" % (
+                        id, data,login_users, type_id, status_id))
+                db.db.commit()
+                cursor.close()
+                return redirect("/new.html")
+            except Exception:
+                return render_template("new.html", login=flask_login.current_user.login, insert_false=True)
+        else:
+            return render_template("new.html", login=flask_login.current_user.login, insert_false=True)
 
 
 if __name__ == '__main__':
