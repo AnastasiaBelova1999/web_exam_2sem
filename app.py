@@ -93,20 +93,8 @@ def list():
     lists = db.select(None, "lists")
     login = flask_login.current_user.login
     types = dict(db.select(None, "types"))
-    statuss = dict(db.select(["id", "title"], "statuss"))
-
-    view_lists = []
-    for list in lists:
-        view_lists.append({"id": list.id,
-                          "data": list.data,
-                          "login_users": list.login_users,
-                          "type": type[list.type_id],
-                          "status": type [list.status_id],
-                          "message": list.message,
-                          "type_id": list.type_id,
-                          "status_id": list.status_id
-                          })
-    return render_template("call-list.html", login=login, lists=view_lists)
+    status = dict(db.select(["id", "title"], "status"))
+    return render_template("call-list.html", login=login, lists=lists)
 
 @app.route('/list/delete', methods=['POST'])
 @login_required
@@ -117,6 +105,51 @@ def list_delete():
     cursor.close()
     return redirect("/list")
 
+@app.route('/list/edit', method=['GET'])
+@login_required
+def list_edit():
+    try:
+        list_id = request.form.get("id")
+        date = request.form.get("date")
+        login = request.form.get("login_users")
+        type_id = request.form.get("type_id")
+        status_id = request.form.get("status_id")
+        type = db.select(["id", "title"], "types")
+        status = db.select(["id", "title"], "status")
+        sub = {
+            'id': list_id,
+            'date': date,
+            'login': login,
+            'type': type_id,
+            'status_id':status_id
+        }
+        return render_template("list_edit.html", list=list, login=flask_login.current_user.login)
+    except Exception:
+        return redirect("/sub")
+
+@app.route('/list/edit/submit', methods=['POST'])
+@login_required
+def sub_edit_submit():
+    list_id = request.form.get("id")
+    date = request.form.get("date")
+    login = request.form.get("login_users")
+    type_id = request.form.get("type_id")
+    status_id = request.form.get("status_id")
+    type = db.select(["id", "title"], "types")
+    status = db.select(["id", "title"], "status")
+    if date and status_id and type_id and:
+        cursor = db.db.cursor(named_tuple=True)
+        try:
+            cursor.execute(
+                "UPDATE `lists` SET  `date` = '%s',`status_id` = '%s', `type_id` = '%s' WHERE `lists`.`id` = %s" % (
+                     date, status_id, type_id))
+            db.db.commit()
+            cursor.close()
+            return redirect("/sub")
+        except Exception:
+            return redirect("/sub")
+    else:
+        return redirect("/sub")
 
 
 if __name__ == '__main__':

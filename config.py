@@ -1,0 +1,5 @@
+SECRET_KEY=b'YidceDBlXG55b0tuP1FceGYyXHgwNy5EXHhjNlx4OTRceGI4UycK'
+MYSQL_HOST='std-mysql.ist.mospolytech.ru'
+MYSQL_USER='std_851'
+MYSQL_PASSWORD='qwerty123'
+MYSQL_DATABASE='std_851'
