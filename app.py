@@ -172,7 +172,7 @@ def sub_new():
             cursor = db.db.cursor(named_tuple=True)
             try:
                 cursor.execute(
-                    "UPDATE `request` SET  `date` = '%s', `status_id` = '%s',`type_id` = '%s',`message` = '%s' WHERE `request`.`id` = %s" % (
+                    "UPDATE `lists` SET  `date` = '%s', `status_id` = '%s',`type_id` = '%s',`message` = '%s' WHERE `request`.`id` = %s" % (
                         date, status_id, type_id, message, older_id))
                 db.db.commit()
                 cursor.close()
