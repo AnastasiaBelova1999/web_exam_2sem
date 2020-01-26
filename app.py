@@ -10,6 +10,7 @@ import flask_login
 import hashlib
 
 app = Flask(__name__)
+application = app
 app.secret_key = 'asjdfbajSLDFBhjasbfd'
 app.debug = True
 app.config.from_pyfile('config.py')
